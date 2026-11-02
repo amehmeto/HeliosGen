@@ -51,7 +51,7 @@ function stageShim(triple) {
 }
 
 if (process.argv.includes("--dev")) {
-  console.log("[desktop] dev mode — run `next dev` yourself (pnpm desktop:dev does both)");
+  console.log("[desktop] dev mode — run `next dev` yourself (bun run desktop:dev does both)");
   stageShim(targetTriple());
   process.exit(0);
 }
@@ -125,15 +125,14 @@ if (existsSync(join(ROOT, "public"))) {
   });
 }
 
-// The Next.js file tracer (nft) is unreliable with pnpm's symlinked store — it
+// The Next.js file tracer (nft) is unreliable with symlinked stores — it
 // leaves many packages as a bare package.json. Rather than chase truncations,
 // throw away the traced node_modules and do a clean production install from the
 // app's own manifest, giving a flat, symlink-free, self-contained tree.
-// nft is unreliable with pnpm (leaves packages truncated), so install the prod
-// tree cleanly with npm instead. The repo is pnpm-managed with a stale
-// package-lock.json, and `next build` output is tied to the EXACT `next` version
+// nft is unreliable with symlinked stores (leaves packages truncated), so install
+// the prod tree cleanly with bun (hoisted linker = flat node_modules) instead. `next build` output is tied to the EXACT `next` version
 // that produced it — so pin every prod dep to the version actually installed in
-// the repo before installing, rather than letting npm re-resolve `^` ranges.
+// the repo before installing, rather than letting the installer re-resolve `^` ranges.
 console.log("[desktop] clean production install into stage…");
 rmSync(join(STAGE, "node_modules"), { recursive: true, force: true });
 
@@ -153,7 +152,7 @@ writeFileSync(
   join(STAGE, "package.json"),
   JSON.stringify({ ...rootPkg, dependencies: pinned, devDependencies: {} }, null, 2),
 );
-run("npm", ["install", "--omit=dev", "--no-audit", "--no-fund", "--no-package-lock"], {}, STAGE);
+run("bun", ["install", "--production", "--no-save", "--linker", "hoisted"], {}, STAGE);
 
 // Sanity check: the standalone server's own entry deps must be intact.
 for (const probe of ["next/package.json", "@next/env/package.json", "react/package.json"]) {

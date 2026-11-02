@@ -28,7 +28,7 @@ releases page — no account, no server, no cloud setup:
 
 > Only the builds actually attached to the latest release are available. macOS
 > is published today. **Tauri can't cross-compile, so Windows and Linux builds
-> need someone on those platforms** — if you can run `npm run desktop:build` on
+> need someone on those platforms** — if you can run `bun run desktop:build` on
 > Windows or Linux (see the **Build from source** section below), please open a
 > PR or attach the artifacts to an issue and we'll add them to the release.
 
@@ -221,7 +221,7 @@ Prefer to build it yourself, or need a platform that isn't on the releases page
 yet? The whole app builds from this repo.
 
 Tauri does **not** cross-compile — build on the OS you want to target. Run
-`npm run desktop:build` on a Mac for the macOS build, on Windows for Windows,
+`bun run desktop:build` on a Mac for the macOS build, on Windows for Windows,
 on Linux for Linux.
 
 > **Want to help ship Windows / Linux builds?** Build on that OS and send the
@@ -251,8 +251,8 @@ Platform-specific system deps:
 ```bash
 git clone https://github.com/SegFault42/HeliosGen
 cd HeliosGen
-npm install
-npm run desktop:build
+bun install
+bun run desktop:build
 ```
 
 Artifacts land in `src-tauri/target/release/bundle/`:
@@ -269,7 +269,7 @@ Right-click → Open, or `xattr -cr "src-tauri/target/release/bundle/macos/Helio
 ## Develop (hot reload)
 
 ```bash
-npm run desktop:dev
+bun run desktop:dev
 ```
 
 Runs `next dev` and `tauri dev` together. The first run compiles the Rust shell
