@@ -30,8 +30,8 @@ hosted/web deployment.
 
 - `next.config.ts` emits `output: "standalone"` when `DESKTOP_BUILD=1`.
 - `scripts/desktop/build-server.mjs` builds it, then **discards the traced
-  `node_modules`** (nft is unreliable with pnpm and leaves packages truncated)
-  and runs a clean `npm install --omit=dev` into `src-tauri/server/` for a flat,
+  `node_modules`** (nft is unreliable with symlinked stores and leaves packages truncated)
+  and runs a clean `bun install --production --linker hoisted` into `src-tauri/server/` for a flat,
   symlink-free tree. It also copies `.next/static` + `public` in, copies the
   current `node` binary to `src-tauri/server/node-bin/node` (bundled as a
   resource), and `cargo build`s the `src-tauri/loader` shim to
@@ -45,21 +45,21 @@ hosted/web deployment.
 | Tool | Notes |
 | --- | --- |
 | **Rust** | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` (installed: rustc 1.98). |
-| **Node 22+** | Repo's `pnpm@9.15.9` needs Node ≥ 22.13. `nvm use 22 && corepack enable`. |
+| **Bun + Node 22+** | Repo is Bun-managed (`packageManager: bun@1.4.4`); Node 22+ is still the runtime bundled into the desktop app. |
 | **Tauri system deps** | macOS: Xcode CLT. Linux: webkit2gtk + build-essential. See <https://v2.tauri.app/start/prerequisites/>. |
 
 App icons are already generated in `src-tauri/icons/` from `src-tauri/icon-source.png`
 (a 1024² render of `public/HG.svg`). To regenerate after a logo change:
-`npx @tauri-apps/cli@^2 icon src-tauri/icon-source.png`.
+`bunx @tauri-apps/cli@^2 icon src-tauri/icon-source.png`.
 
-Install JS deps (adds `@tauri-apps/cli`): `pnpm install` (or `npm install`).
+Install JS deps (adds `@tauri-apps/cli`): `bun install`.
 
 ## Run it
 
 **Development** (hot reload, two processes):
 
 ```bash
-pnpm desktop:dev
+bun run desktop:dev
 ```
 
 Runs `next dev` on :3000 and `tauri dev` together; the shell reads
@@ -69,7 +69,7 @@ compiles the Rust shell (~1–2 min).
 **Packaged build:**
 
 ```bash
-pnpm desktop:build            # → src-tauri/target/release/bundle/
+bun run desktop:build            # → src-tauri/target/release/bundle/
 open "src-tauri/target/release/bundle/macos/HeliosGen.app"
 ```
 
@@ -95,7 +95,7 @@ login keychain + notarization credentials.
    Connect API key or Apple-ID app-specific password).
 2. ```bash
    set -a; source scripts/desktop/sign.env; set +a
-   pnpm desktop:build
+   bun run desktop:build
    ```
 
 With `APPLE_SIGNING_IDENTITY` set, `build-server.mjs` codesigns the Mach-O in
@@ -168,7 +168,7 @@ plus every referenced image/video — portable and shareable as a file
       `heliosgen-desktop` entry) to the same `X.Y.Z`, then `node
       scripts/desktop/check-version.mjs X.Y.Z` to confirm they agree. Commit,
       then tag `vX.Y.Z`. Tauri bakes `tauri.conf.json` `version` into the macOS
-      Info.plist / Windows installer and into `NEXT_PUBLIC_APP_VERSION`. `npm run
+      Info.plist / Windows installer and into `NEXT_PUBLIC_APP_VERSION`. `bun run
       desktop:build` runs the check first, and the `version-check` CI job fails
       any tag push whose version files disagree (issue #12).
       `NEXT_PUBLIC_UPDATE_CHECK_FORCE=1` (dev) forces the banner on for eyeballing.
